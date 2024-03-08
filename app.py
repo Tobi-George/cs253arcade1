@@ -18,13 +18,16 @@ def get_db_connection():
     quiz.row_factory = sqlite3.Row
     quiz_scores = sqlite3.connect(quiz_score_database)
     quiz_scores.row_factory = sqlite3.Row
-    return conn, quiz, quiz_scores
+    snake_scores = sqlite3.connect(quiz_score_database)
+    snake_scores.row_factory = sqlite3.Row
+    return conn, quiz, quiz_scores, snake_scores
 
 def init_db():
     dbs = get_db_connection()
     db = dbs[0]
     db2 = dbs[1]
     db3 = dbs[2]
+    db4 = dbs[3]
     db.execute('''
         CREATE TABLE IF NOT EXISTS high_scores (
             id INTEGER PRIMARY KEY, 
@@ -45,12 +48,21 @@ def init_db():
             score INTEGER
             )
         ''')
+    db4.execute('''
+            CREATE TABLE IF NOT EXISTS snake_scores (
+                id INTEGER PRIMARY KEY, 
+                name TEXT, 
+                score INTEGER
+                )
+            ''')
     db.commit()
     db.close()
     db2.commit()
     db2.close()
     db3.commit()
     db3.close()
+    db4.commit()
+    db4.close()
 
 # Manually pushing the application context
 with app.app_context():
@@ -270,7 +282,28 @@ def get_high_scores_quiz_route():
     scores = get_high_scores_quiz()
     return jsonify([{'name': row['name'], 'score': row['score']} for row in scores])
 
+def add_score_snake(name, score):
+    snake_score = get_db_connection()[2]
+    snake_score.execute('INSERT INTO snake_scores (name, score) VALUES (?, ?)', (name, score))
+    snake_score.commit()
+    snake_score.close()
 
+def get_high_scores_snake(limit=10):
+    snake_score = get_db_connection()[2]
+    s_scores = snake_score.execute('SELECT name, score FROM snake_scores ORDER BY score DESC LIMIT ?', (limit,)).fetchall()
+    snake_score.close()
+    return s_scores
+
+@app.route('/add_score_snake', methods=['POST'])
+def add_score_snake_route():
+    score_data = request.json
+    add_score_snake(score_data['name'], score_data['score'])
+    return jsonify({'message': 'Score added successfully!'}), 201
+
+@app.route('/high_scores_snake', methods=['GET'])
+def get_high_scores_snake_route():
+    scores = get_high_scores_snake()
+    return jsonify([{'name': row['name'], 'score': row['score']} for row in scores])
 
 if __name__ == '__main__':
     app.run(debug=True)
