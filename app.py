@@ -174,7 +174,10 @@ def quiz():
     quiz = get_db_connection()[1]
     quiz_score = get_db_connection()[2]
     top_score_row = quiz_score.execute('SELECT * FROM quiz_scores ORDER BY score DESC LIMIT 1').fetchall()
-    top_score = top_score_row[0][2]
+    if top_score_row:
+        top_score = top_score_row[0][2]
+    else:
+        top_score = []
     add_quiz_questions()
     if 'quiz_points' not in session:
         session['quiz_points'] = 0
