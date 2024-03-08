@@ -4,6 +4,15 @@
 {% block head %}
     <title>Snake</title>
     <style>
+
+        #game-over {
+      font-size: 24px;
+      font-weight: bold;
+      color: red;
+      text-align: center;
+      margin-top: 100px;
+        }
+
         .flex-container {
             display: flex;
             justify-content: center;
@@ -28,12 +37,25 @@
             background-color: red;
             position: absolute;
         }
+
+        #showScore {
+              font-family: Arial, sans-serif;
+              font-size: 24px;
+              font-weight: bold;
+              color: Green;
+                padding: 10px;
+              text-align: left;
+                position: absolute;
+                top: 50px;
+               right: 10px;
+    }
     </style>
 {% endblock head %}
 
 {% block content %}
     <div class="flex-container">
     <div id="gameContainer" class="game-container"></div>
+        <div id="showScore">Score: 0</div>
 
     <script>
         let loop;
@@ -41,11 +63,25 @@
         let food = {x: 100, y: 100};
         let direction = {x: 0, y: -20};
         let first_round = true;
+        let score = 0
         const gameContainer = document.getElementById('gameContainer');
         const gameWidth = 400;
         const gameHeight = 400;
+        let showScore = document.getElementById('showScore');
 
         resetGameState();
+
+
+        function updateScore () {
+             console.log("Updating score:", score);
+              showScore.textContent = 'Score: ' + score;
+        }
+
+
+        function resetScore () {
+            score = 0;
+            updateScore();
+        }
 
         function placeFood() {
             food = {
@@ -67,34 +103,29 @@
             return false;
         }
 
-    function update() {
-        if (checkGameOver()) {
-            // Ask the player if they want to play again
-            /*
-            let playAgain = confirm("Game Over! Do you want to play again?");
-            if (playAgain) {
-                // Reset game state to start a new game
-                resetGameState();
-            } else {
-                // Redirect to the index route if they choose not to play again
-                window.location.href = '/';
+
+        function update () {
+            if (checkGameOver ()) {
+                document.getElementById ( 'game-over' ).style.display = 'block';
+                clearInterval ( loop );
+                return;
             }
-             */
-            clearInterval(loop);
-            return;
-        }
 
             const newHead = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
-            snake.unshift(newHead);
+            snake.unshift ( newHead );
 
             if (snake[0].x === food.x && snake[0].y === food.y) {
-                placeFood();
+                score += 10;
+                updateScore ();
+                placeFood ();
             } else {
-                snake.pop();
+                snake.pop ();
             }
 
-            render();
+            render ();
         }
+
+
         function resetGameState() {
             // Reset the snake to its initial state or position
             snake = [{x: 200, y: 200}];
@@ -103,7 +134,7 @@
             // Reset direction
             direction = {x: 0, y: -20};
             // Reset any other game state variables, such as score or errors, if applicable
-
+            resetScore ()
             // Optionally, clear and re-render the game area immediately
             render();
         }
@@ -144,14 +175,14 @@
 
 
         function play() {
-            if (first_round === false){
-                 resetGameState();
-            }
-            else {
+            document.getElementById( 'game-over' ).style.display = 'none';
+            if (first_round === false) {
+                resetGameState();
+            } else {
                 first_round = false;
             }
 
-            loop = setInterval(update, 100);
+            loop = setInterval( update, 100 );
 
             return true
         }
@@ -159,6 +190,7 @@
     </script>
     <button onclick= "play()">Play</button>
     </div>
+     <div id="game-over" style="display: none;">Game Over!</div>
 
 
 {% endblock content%}
